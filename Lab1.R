@@ -11,3 +11,5 @@ html_table(tables[4])
 list.by.region <- as.data.frame(html_table(tables[4],fill = TRUE))
 list.by.country <-as.data.frame(html_table(tables[6],fill = TRUE))
 components <- as.data.frame(html_table(tables[7],fill = TRUE))
+
+#comment
