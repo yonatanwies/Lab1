@@ -3,29 +3,43 @@
 
 library(tidyverse) # This includes dplyr, stringr, ggplot2, .. 
 library(data.table)
-#library(rworldmap) # world map
-#library(ggthemes)
-#library(reshape2) # melt: change data-frame format long/wide
-#library(e1071) # skewness and kurtosis
+library(rworldmap) # world map
+library(ggthemes)
+library(reshape2) # melt: change data-frame format long/wide
+library(e1071) # skewness and kurtosis
 library(rvest)
-#library(corrplot)
-#library(moments)
-#library(spatstat.geom)
+#1.a
 
-#Q1
+url = 'https://en.wikipedia.org/wiki/Democracy_Index'
+source = read_html(url)
+list.by.region <- source %>%
+  html_nodes(xpath = '//*[@id="mw-content-text"]/div[1]/table[3]') %>%
+  html_table()
+list.by.region <- as.data.frame(region_table)
+list.by.country <- source %>%
+  html_nodes(xpath = '//*[@id="mw-content-text"]/div[1]/table[5]') %>%
+  html_table(fill = TRUE)
+list.by.country <- as.data.frame(country_table)
+components <- source %>%
+  html_nodes(xpath = '//*[@id="mw-content-text"]/div[1]/table[6]') %>%
+  html_table()
+components <- as.data.frame(components_table)
+head(list.by.region, 5)
+head(list.by.country, 5)
+head(components, 5)
+#1.b
+bottom_five <- list.by.country %>% 
+  arrange(desc(`2022 rank`)) %>% 
+  select(`Country`, `2022 rank`) %>% 
+  head(5)
 
-url <-"https://en.wikipedia.org/wiki/Democracy_Index"
-democracy.index<-read_html(url)
-tables<- html_nodes(democracy.index,"table")
-html_table(tables[4])
+top_five <- list.by.country %>% 
+  arrange(`2022 rank`) %>% 
+  select(`Country`, `2022 rank`) %>% 
+  head(5)
 
-list.by.region <- as.data.frame(html_table(tables[4],fill = TRUE))
-list.by.country <-as.data.frame(html_table(tables[6],fill = TRUE))
-components <- as.data.frame(html_table(tables[7],fill = TRUE))
-
-head(list.by.country)
-head(list.by.region)
-head(components)
+avg.list<-rowMeans(list.by.country[5:length(list.by.country)]) %>% sort(decreasing = TRUE)
+top.average.five<-avg.list[1:5]
+bottom.average.five<-sort(avg.list,decreasing = FALSE)[1:5]
 
 
-class(list.by.country)
