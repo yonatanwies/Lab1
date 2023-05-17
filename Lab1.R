@@ -44,8 +44,17 @@ bottom.average.five<-sort(avg.list,decreasing = FALSE)[1:5]
 
 #2.a
 
-library(ggplot2)
-dem_by_region <- country_table[,c('Region', '2022 rank')]
-x<-ggplot(dem_by_region, aes(x='2022 rank', y=Region, fill=Region)) + 
-  geom_boxplot() +
-  labs(title="Democracy Index by Region (2022)", y="Democracy Index")
+North.America<-list.by.country %>% filter(list.by.country$Region=="North America")
+Western.Europe<-list.by.country %>% filter(list.by.country$Region=="Western Europe")
+Central.Eastern.Europe<-list.by.country %>% filter(list.by.country$Region=="Central and Eastern Europe")
+Latin.America<-list.by.country %>% filter(list.by.country$Region=="Latin America and the Caribbean")
+Asia.Australasia<-list.by.country %>% filter(list.by.country$Region=="Asia and Australasia")
+MiddleEast.NorthAfrica<-list.by.country %>% filter(list.by.country$Region=="Middle East and North Africa")
+Africa<-list.by.country %>% filter(list.by.country$Region=="Sub-Saharan Africa") 
+
+
+df<-c("North America"=North.America[5],"Western Europe" = Western.Europe[5],Central.Eastern.Europe[5],
+      Latin.America[5],Asia.Australasia[5],MiddleEast.NorthAfrica[5],Africa[5])
+boxplot(df)
+
+
