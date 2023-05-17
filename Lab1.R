@@ -12,4 +12,13 @@ list.by.region <- as.data.frame(html_table(tables[4],fill = TRUE))
 list.by.country <-as.data.frame(html_table(tables[6],fill = TRUE))
 components <- as.data.frame(html_table(tables[7],fill = TRUE))
 
-#comment
+#1.b
+bottom_five <- list.by.country %>% 
+  arrange(desc(`2022 rank`)) %>% 
+  select(`Country`, `2022 rank`) %>% 
+  head(5)
+
+top_five <- list.by.country %>% 
+  arrange(`2022 rank`) %>% 
+  select(`Country`, `2022 rank`) %>% 
+  head(5)
