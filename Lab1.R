@@ -42,4 +42,10 @@ avg.list<-rowMeans(list.by.country[5:length(list.by.country)]) %>% sort(decreasi
 top.average.five<-avg.list[1:5]
 bottom.average.five<-sort(avg.list,decreasing = FALSE)[1:5]
 
+#2.a
 
+library(ggplot2)
+dem_by_region <- country_table[,c('Region', '2022 rank')]
+x<-ggplot(dem_by_region, aes(x='2022 rank', y=Region, fill=Region)) + 
+  geom_boxplot() +
+  labs(title="Democracy Index by Region (2022)", y="Democracy Index")
