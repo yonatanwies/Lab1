@@ -1,19 +1,8 @@
 #To update our file, first save the changes locally on your computer, then click on the GIT button (next to "go to file/function)
 # and click "commit". this will save the branch. Afterwards click on "Push" to merge changes to main file.
 
-library(tidyverse) # This includes dplyr, stringr, ggplot2, .. 
-library(data.table)
-#library(rworldmap) # world map
-#library(ggthemes)
-#library(reshape2) # melt: change data-frame format long/wide
-#library(e1071) # skewness and kurtosis
+library(tidyverse)
 library(rvest)
-#library(corrplot)
-#library(moments)
-#library(spatstat.geom)
-
-#Q1
-
 url <-"https://en.wikipedia.org/wiki/Democracy_Index"
 democracy.index<-read_html(url)
 tables<- html_nodes(democracy.index,"table")
@@ -23,9 +12,4 @@ list.by.region <- as.data.frame(html_table(tables[4],fill = TRUE))
 list.by.country <-as.data.frame(html_table(tables[6],fill = TRUE))
 components <- as.data.frame(html_table(tables[7],fill = TRUE))
 
-head(list.by.country)
-head(list.by.region)
-head(components)
-
-
-class(list.by.country)
+#comment
