@@ -57,4 +57,4 @@ df<-c("North America"=North.America[5],"Western Europe" = Western.Europe[5],Cent
       Latin.America[5],Asia.Australasia[5],MiddleEast.NorthAfrica[5],Africa[5])
 boxplot(df)
 
-
+boxplot.stats(list.by.country)$out
