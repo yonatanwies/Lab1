@@ -42,7 +42,9 @@ avg.list<-rowMeans(list.by.country[5:length(list.by.country)]) %>% sort(decreasi
 top.average.five<-avg.list[1:5]
 bottom.average.five<-sort(avg.list,decreasing = FALSE)[1:5]
 
-#2.a
+#2.
+reg <-c("North America","Western Europe","Central and Eastern Europe","Latin America and the Caribbean",
+        "Asia and Australasia","Middle East and North Africa",)
 
 North.America<-list.by.country %>% filter(list.by.country$Region=="North America")
 Western.Europe<-list.by.country %>% filter(list.by.country$Region=="Western Europe")
@@ -58,3 +60,5 @@ df<-c("North America"=North.America[5],"Western Europe" = Western.Europe[5],Cent
 boxplot(df)
 
 boxplot.stats(list.by.country)$out
+
+boxplot(list.by.country$"2022" ~ list.by.country$Region)
