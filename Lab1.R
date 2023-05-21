@@ -9,21 +9,23 @@ library(reshape2) # melt: change data-frame format long/wide
 library(e1071) # skewness and kurtosis
 library(rvest)
 #1.a
+all.tables = html_nodes(source, "table")  
 
+# Use html_table to extract the individual tables from the all.tables object:
 url = 'https://en.wikipedia.org/wiki/Democracy_Index'
 source = read_html(url)
 list.by.region <- source %>%
-  html_nodes(xpath = '//*[@id="mw-content-text"]/div[1]/table[3]') %>%
-  html_table()
-list.by.region <- as.data.frame(region_table)
+  html_nodes(xpath = '//*[@id="mw-content-text"]/div[1]/table[4]') %>%
+  html_table(fill =TRUE)
+list.by.region <- as.data.frame(list.by.region[[1]])
 list.by.country <- source %>%
   html_nodes(xpath = '//*[@id="mw-content-text"]/div[1]/table[5]') %>%
   html_table(fill = TRUE)
-list.by.country <- as.data.frame(country_table)
+list.by.country <- as.data.frame(list.by.country[[1]])
 components <- source %>%
   html_nodes(xpath = '//*[@id="mw-content-text"]/div[1]/table[6]') %>%
   html_table()
-components <- as.data.frame(components_table)
+components <- as.data.frame(components[[1]])
 head(list.by.region, 5)
 head(list.by.country, 5)
 head(components, 5)
@@ -37,15 +39,32 @@ top_five <- list.by.country %>%
   arrange(`2022 rank`) %>% 
   select(`Country`, `2022 rank`) %>% 
   head(5)
-
+x<-c(list.by.country[5,which(list.by.country$'Region'=="North America")])
+x
 avg.list<-rowMeans(list.by.country[5:length(list.by.country)]) %>% sort(decreasing = TRUE)
 top.average.five<-avg.list[1:5]
 bottom.average.five<-sort(avg.list,decreasing = FALSE)[1:5]
 
-#2.
+#2.a
 
 boxplot(list.by.country$"2022" ~ list.by.country$Region)
+#2.b
+ggplot(list.by.country, aes(x = `2022`, fill = Region)) +
+  geom_density(alpha = 0.5) +
+  labs(x = "Democracy Index (2022)", y = "Density") +
+  ggtitle("Density Plots of Democracy Index by Region (2022)")
+summary_stats <- list.by.country %>%
+  group_by(Region) %>%
+  summarise(
+    Mean = mean(`2022`),
+    Variance = var(`2022`),
+    Skewness = skewness(`2022`),
+    Kurtosis = kurtosis(`2022`)
+  )
 
+print(summary_stats)
 
-
-
+#3.a
+function_name <- function(parameters){
+  function body 
+}
