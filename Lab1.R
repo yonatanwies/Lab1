@@ -19,11 +19,11 @@ list.by.region <- source %>%
   html_table(fill =TRUE)
 list.by.region <- as.data.frame(list.by.region[[1]])
 list.by.country <- source %>%
-  html_nodes(xpath = '//*[@id="mw-content-text"]/div[1]/table[5]') %>%
+  html_nodes(xpath = '//*[@id="mw-content-text"]/div[1]/table[6]') %>%
   html_table(fill = TRUE)
 list.by.country <- as.data.frame(list.by.country[[1]])
 components <- source %>%
-  html_nodes(xpath = '//*[@id="mw-content-text"]/div[1]/table[6]') %>%
+  html_nodes(xpath = '//*[@id="mw-content-text"]/div[1]/table[7]') %>%
   html_table()
 components <- as.data.frame(components[[1]])
 head(list.by.region, 5)
@@ -65,6 +65,26 @@ summary_stats <- list.by.country %>%
 print(summary_stats)
 
 #3.a
-function_name <- function(parameters){
-  function body 
+plot_democracy_index <- function(data, countries) {
+  # Subset the data for the specified countries
+  subset_data <- data[data$Country %in% countries, ]
+  
+  # Convert year column to factor for plotting
+  Year = c(2006:2022)
+  subset_data$Year <- as.factor(subset_data$Year)
+  
+  # Plot the democracy index values for each country
+  ggplot(subset_data, aes(x = Year, y = DemocracyIndex, color = Country)) +
+    geom_line() +
+    labs(x = "Year", y = "Democracy Index", color = "Country") +
+    ggtitle("Democracy Index for Selected Countries Over Time") +
+    theme(legend.title = element_blank())
 }
+#Write a function that receives as input a data-frame, and a vector of country names (as strings).
+#The function plots the values of the democracy index of these countries in different colors as a function of the year (from 2006 to 2022),
+#shown on the same graph as curves with different colors or symbols. Use meaningful axis and plot labels, and add an informative legend.
+#Use the function and plot of the democracy index for five countries of your choice.
+# Example country names
+countries<-list.by.country$Country
+# Plot the democracy index for the selected countries
+plot_democracy_index(list.by.country, countries)
