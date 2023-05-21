@@ -42,20 +42,10 @@ avg.list<-rowMeans(list.by.country[5:length(list.by.country)]) %>% sort(decreasi
 top.average.five<-avg.list[1:5]
 bottom.average.five<-sort(avg.list,decreasing = FALSE)[1:5]
 
-#2.a
+#2.
 
-North.America<-list.by.country %>% filter(list.by.country$Region=="North America")
-Western.Europe<-list.by.country %>% filter(list.by.country$Region=="Western Europe")
-Central.Eastern.Europe<-list.by.country %>% filter(list.by.country$Region=="Central and Eastern Europe")
-Latin.America<-list.by.country %>% filter(list.by.country$Region=="Latin America and the Caribbean")
-Asia.Australasia<-list.by.country %>% filter(list.by.country$Region=="Asia and Australasia")
-MiddleEast.NorthAfrica<-list.by.country %>% filter(list.by.country$Region=="Middle East and North Africa")
-Africa<-list.by.country %>% filter(list.by.country$Region=="Sub-Saharan Africa") 
+boxplot(list.by.country$"2022" ~ list.by.country$Region)
 
-
-df<-c("North America"=North.America[5],"Western Europe" = Western.Europe[5],Central.Eastern.Europe[5],
-      Latin.America[5],Asia.Australasia[5],MiddleEast.NorthAfrica[5],Africa[5])
-boxplot(df)
 
 
 
