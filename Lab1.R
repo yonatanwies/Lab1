@@ -12,30 +12,30 @@ library(rvest)
 
 url = 'https://en.wikipedia.org/wiki/Democracy_Index'
 source = read_html(url)
+tables<-html_table(source)
+list.by.region<-tables[5]
+list.by.country<-tables[7]
+components <- tables[8]
+tables[1]
 list.by.region <- source %>%
   html_nodes(xpath = '//*[@id="mw-content-text"]/div[1]/table[4]') %>%
   html_table()
-list.by.region <- as.data.frame(list.by.region)
-list.by.country <- source %>%
-  html_nodes(xpath = '//*[@id="mw-content-text"]/div[1]/table[6]') %>%
-  html_table(fill = TRUE)
+list.by.region <- as.data.frame(list.by.region[[1]])
+#list.by.country <- source %>%
+#  html_nodes(xpath = '//*[@id="mw-content-text"]/div[1]/table[6]') %>%
+#  html_table(fill = TRUE)
 list.by.country <- as.data.frame(list.by.country)
-components <- source %>%
-  html_nodes(xpath = '//*[@id="mw-content-text"]/div[1]/table[7]') %>%
-  html_table()
+#components <- source %>%
+#  html_nodes(xpath = '//*[@id="mw-content-text"]/div[1]/table[7]') %>%
+#  html_table()
 components <- as.data.frame(components)
-list.by.region
-list.by.country
-components
-
 head(list.by.region, 5)
 head(list.by.country, 5)
 head(components, 5)
-
 #1.b
 bottom_five <- list.by.country %>% 
-  arrange(desc("2022 rank")) %>% 
-  select("Country", '2022 rank') %>% 
+  arrange(desc(`2022 rank`)) %>% 
+  select(`Country`, `2022 rank`) %>% 
   head(5)
 
 top_five <- list.by.country %>% 
@@ -50,21 +50,3 @@ bottom.average.five<-sort(avg.list,decreasing = FALSE)[1:5]
 #2.
 
 boxplot(list.by.country$"2022" ~ list.by.country$Region)
-
-regions <- list.by.country$Region %>% unique()
-data_2022 <- list.by.country$`2022`
-
-data.by.region <- list.by.country$"2022"
-data.by.region
-
-
-
-df <- data.frame(Region = character(), Data = list(), stringsAsFactors = FALSE)
-data_by_region <- split(data_2022, regions)
-
-
-
-
-st<-boxplot.stats(list.by.country$"2022" ~ list.by.country$Region)
-
-
