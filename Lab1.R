@@ -58,3 +58,4 @@ df<-c("North America"=North.America[5],"Western Europe" = Western.Europe[5],Cent
 boxplot(df)
 
 
+
