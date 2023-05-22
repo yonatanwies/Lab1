@@ -83,3 +83,41 @@ summary_stats <- list.by.country %>%
   )
 
 print(summary_stats)
+
+
+#4
+#helper function to determine type of regime for each country.
+whichDemocracy<-function(num){
+  ifelse(num>8 & num <=10,"Full democracy",
+         ifelse(num>6 & num<=8, "Flawed democracy",
+                ifelse(num>4 & num<=6,"Hybrid Regime","Authoritarian")))
+    
+}
+data_2006 <- list.by.country$"2006"
+data_2022 <- list.by.country$"2022"
+
+empirical_changes<-function(old,new){
+  regime.type<-c("Full democracy","Flawed democracy","Hybrid Regime","Authoritarian")
+  result<-data.frame(matrix(0,nrow=4,ncol = 4,dimnames = c(regime.type %>% list(),regime.type %>% list())))
+  for(i in 1:length(regime.type)){
+    for(j in 1:length(regime.type)){
+      to<-list.by.country$Country[which(whichDemocracy(data_2006)==regime.type[i])]
+      from<-list.by.country$Country[which(whichDemocracy(data_2022)==regime.type[j])]
+      val<-length(to[to%in%from])/length(to) 
+      result[i,j]<-val
+      
+    }
+  }
+  return(result)
+}
+empirical_changes(data_2006,data_2022)
+names <- c("Full democracy", "Flawed democracy", "Flawed democracy", "Authoritarian")
+
+# Create the heatmap
+heatmap(empirical_changes(data_2006,data_2022)%>%as.matrix(),
+        Rowv = NA,      # Disable row clustering
+        Colv = NA,      # Disable column clustering
+        scale = "none", # Do not scale the values
+        main = "Empirical Changes",
+        colnames = names,
+        rownames = names)
