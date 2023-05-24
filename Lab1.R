@@ -9,11 +9,12 @@ library(reshape2) # melt: change data-frame format long/wide
 library(e1071) # skewness and kurtosis
 library(rvest)
 #1.a
-all.tables = html_nodes(source, "table")  
+
 
 # Use html_table to extract the individual tables from the all.tables object:
 url = 'https://en.wikipedia.org/wiki/Democracy_Index'
 source = read_html(url)
+all.tables = html_nodes(source, "table")  
 list.by.region <- source %>%
   html_nodes(xpath = '//*[@id="mw-content-text"]/div[1]/table[4]') %>%
   html_table(fill =TRUE)
@@ -110,6 +111,7 @@ empirical_changes<-function(old,new){
   }
   return(result)
 }
+
 empirical_changes(data_2006,data_2022)
 names <- c("Full democracy", "Flawed democracy", "Flawed democracy", "Authoritarian")
 
@@ -121,3 +123,58 @@ heatmap(empirical_changes(data_2006,data_2022)%>%as.matrix(),
         main = "Empirical Changes",
         colnames = names,
         rownames = names)
+
+
+
+#Q5
+#GDP
+url = "https://en.wikipedia.org/wiki/List_of_countries_by_GDP_(PPP)_per_capita"
+source = read_html(url)
+all.tables = html_nodes(source, "table")  
+gdp.countries <- source %>%
+  html_nodes(xpath = '//*[@id="mw-content-text"]/div[1]/table[1]') %>%
+  html_table(fill =TRUE)
+gdp.countries <- as.data.frame(gdp.countries[[1]])
+gdp.countries
+#INCARNATION
+url = "https://en.wikipedia.org/wiki/List_of_countries_by_incarceration_rate"
+source = read_html(url)
+all.tables = html_nodes(source, "table")  
+incarnation.rates <- source %>%
+  html_nodes(xpath = '//*[@id="mw-content-text"]/div[1]/table[2]') %>%
+  html_table(fill =TRUE)
+incarnation.rates <- as.data.frame(incarnation.rates[[1]])
+#AREA
+
+url = "https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_area"
+source = read_html(url)
+all.tables = html_nodes(source, "table")  
+area <- source %>%
+  html_nodes(xpath = '//*[@id="mw-content-text"]/div[1]/table[2]') %>%
+  html_table(fill =TRUE)
+area <- as.data.frame(area[[1]])
+
+#POPULATION SIZE
+url = "https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_population"
+source = read_html(url)
+all.tables = html_nodes(source, "table")  
+population <- source %>%
+  html_nodes(xpath = '//*[@id="mw-content-text"]/div[1]/table[2]') %>%
+  html_table(fill =TRUE)
+population <- as.data.frame(population)
+
+names(gdp.countries)
+# Check column names in population dataframe
+print(colnames(population))
+
+# Merge the two dataframes based on the common columns
+merged_df <- merge(list.by.country, population, by = "Country",by.y = "Country...Dependency", all = TRUE)
+merged_df <- merge(merged_df, area, by = "Country",by.y = "Country / Dependency", all = TRUE)
+merged_df <- merge(merged_df, incarnation.rates, by = "Country",by.y = "Location", all = TRUE)
+merged_df <- merge(merged_df, gdp.countries, by = "Country",by.y = "Country/Territory", all = TRUE)
+# Print the merged dataframe
+head(merged_df,5)
+
+#5.b.
+
+
