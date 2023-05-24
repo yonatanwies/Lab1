@@ -49,6 +49,7 @@ bottom.average.five<-sort(avg.list,decreasing = FALSE)[1:5]
 
 boxplot(list.by.country$"2022" ~ list.by.country$Region)
 #2.b
+
 ggplot(list.by.country, aes(x = `2022`, fill = Region)) +
   geom_density(alpha = 0.5) +
   labs(x = "Democracy Index (2022)", y = "Density") +
@@ -65,26 +66,53 @@ summary_stats <- list.by.country %>%
 print(summary_stats)
 
 #3.a
-plot_democracy_index <- function(data, countries) {
-  # Subset the data for the specified countries
-  subset_data <- data[data$Country %in% countries, ]
-  
-  # Convert year column to factor for plotting
-  Year = c(2006:2022)
-  subset_data$Year <- as.factor(subset_data$Year)
-  
-  # Plot the democracy index values for each country
-  ggplot(subset_data, aes(x = Year, y = DemocracyIndex, color = Country)) +
+#A function for listbycountry
+plot_democracy_index_country <- function(data, names) {
+  subset_data <- data[data$Country %in% names, ]
+  grouping_column <- "Country"
+  subset_data_long <- reshape2::melt(subset_data, id.vars = c("Country", "Region", "Regime type", "2022 rank"), variable.name = "Year", value.name = "DemocracyIndex")
+  subset_data_long$Year <- as.integer(subset_data_long$Year)
+  ggplot(subset_data_long, aes(x = Year, y = DemocracyIndex, color = get(grouping_column), linetype = get(grouping_column))) +
     geom_line() +
-    labs(x = "Year", y = "Democracy Index", color = "Country") +
-    ggtitle("Democracy Index for Selected Countries Over Time") +
+    labs(x = "Year", y = "Democracy Index", color = grouping_column, linetype = grouping_column) +
+    ggtitle("Democracy Index Over Time") +
     theme(legend.title = element_blank())
+    
 }
-#Write a function that receives as input a data-frame, and a vector of country names (as strings).
-#The function plots the values of the democracy index of these countries in different colors as a function of the year (from 2006 to 2022),
-#shown on the same graph as curves with different colors or symbols. Use meaningful axis and plot labels, and add an informative legend.
-#Use the function and plot of the democracy index for five countries of your choice.
-# Example country names
-countries<-list.by.country$Country
-# Plot the democracy index for the selected countries
-plot_democracy_index(list.by.country, countries)
+
+#A function for listbyregion
+
+plot_democracy_index_region <- function(data, names) {
+  subset_data <- data[data$Region %in% names, ]
+  grouping_column <- "Region"
+  subset_data <- subset_data[, c("Region", "2022", "2021", "2020", "2019", "2018", "2017", "2016", "2015", "2014", "2013", "2012", "2011", "2010", "2008", "2006")]
+  subset_data_long <- reshape2::melt(subset_data, id.vars = "Region", variable.name = "Year", value.name = "DemocracyIndex")
+  subset_data_long$Year <- as.numeric(subset_data_long$Year)
+  ggplot(subset_data_long, aes(x = Year, y = DemocracyIndex, color = get(grouping_column), linetype = get(grouping_column))) +
+    geom_line() +
+    labs(x = "Year", y = "Democracy Index", color = grouping_column, linetype = grouping_column) +
+    ggtitle("Democracy Index Over Time") +
+    theme(legend.title = element_blank()) 
+}
+plot_democracy_index_region(list.by.region,region_vector)
+plot_democracy_index_country(list.by.country,c("England","Israel","Iraq"))
+#3b
+plot_democracy_index_clusters <- function(data) {
+  data$Change <- data$`2022` - data$`2006`
+  cluster1 <- data[data$Change >= 1.5, ]
+  cluster2 <- data[data$Change <= -1.5, ]
+  cluster3 <- data[data$Change >= 0.75 & data$Change <= 1.5, ]
+  cluster4 <- data[data$Change <= -0.75 & data$Change >= -1.5, ]
+  cluster5 <- data[data$Change <= -0.75 & data$`2022` - data$`Lowest drop` >= 0.75, ]
+  cluster6 <- data[data$Change >= 0.75 & data$`2022` - data$`Highest point` <= -0.75, ]
+  cluster7 <- data[data$`Highest` - data$`Lowest` < 0.5, ]
+  cluster8 <- data[!(data %in% rbind(cluster1, cluster2, cluster3, cluster4, cluster5,cluster6,cluster7)), ]
+}
+  plot_democracy_index_country(cluster1[,-length(cluster1)],cluster1$Country)
+  plot_democracy_index_country(cluster2[,-length(cluster2)], cluster2$Country)
+  plot_democracy_index_country(cluster3[,-length(cluster3)], cluster3$Country)
+  plot_democracy_index_country(cluster4[,-length(cluster4)], cluster4$Country)
+  plot_democracy_index_country(cluster5[,-length(cluster5)], cluster5$Country)
+  plot_democracy_index_country(cluster6[,-length(cluster6)], cluster6$Country)
+  plot_democracy_index_country(cluster7[,-length(cluster7)], cluster7$Country)
+  plot_democracy_index_country(cluster8[,-length(cluster8)], cluster8$Country)
