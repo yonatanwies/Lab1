@@ -188,7 +188,8 @@ gdp.countries <- source %>%
   html_nodes(xpath = '//*[@id="mw-content-text"]/div[1]/table[1]') %>%
   html_table(fill =TRUE)
 gdp.countries <- as.data.frame(gdp.countries[[1]])
-gdp.countries
+colnames(gdp.countries)[1] <- "Country"
+gdp.countries.clean<-gdp.countries[,c('Country',"CIA[8][9][10]")]
 #INCARNATION
 url = "https://en.wikipedia.org/wiki/List_of_countries_by_incarceration_rate"
 source = read_html(url)
@@ -197,6 +198,7 @@ incarnation.rates <- source %>%
   html_nodes(xpath = '//*[@id="mw-content-text"]/div[1]/table[2]') %>%
   html_table(fill =TRUE)
 incarnation.rates <- as.data.frame(incarnation.rates[[1]])
+incarnation.rates
 #AREA
 
 url = "https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_area"
@@ -216,9 +218,7 @@ population <- source %>%
   html_table(fill =TRUE)
 population <- as.data.frame(population)
 
-names(gdp.countries)
 # Check column names in population dataframe
-print(colnames(population))
 # Merge the two dataframes based on the common columns
 merged_df <- merge(list.by.country, population, by = "Country",by.y = "Country...Dependency", all = TRUE)
 merged_df <- merge(merged_df, area, by = "Country",by.y = "Country / Dependency", all = TRUE)
@@ -228,8 +228,8 @@ merged_df <- merge(merged_df, gdp.countries, by = "Country",by.y = "Country/Terr
 head(merged_df,5)
 
 
-
 #5.b.
+merged_df[,c("CIA[8][9[10]","2022 rank")]
 #Subset the dataframe to include only the necessary columns
 data_subset <- merged_df[, c("CIA[8][9][10]", "2022 rank")]
 data_subset%>%head()
@@ -241,3 +241,90 @@ data_subset$`CIA[8][9][10]` <- as.numeric(data_subset$`CIA[8][9][10]`)
 model <- lm(`CIA[8][9][10]` ~ `2022`, data = data_subset)
 # Print the model summary
 summary(model)
+
+
+
+
+
+#Arranging data
+# Removing asterisk from "Country" names in order to successfully merge
+#GDP
+
+#incarceration
+incarnation.rates$Location <-gsub("\\ ", "", incarnation.rates$Location)
+incarnation.rates$Location <-gsub("\\*", "", incarnation.rates$Location)
+incarnation.rates$Location <-gsub(" \\[Note]", "", incarnation.rates$Location)
+
+
+
+#Changing to "Country" column name in order to merge all the data successfully
+#GDP
+colnames(gdp.countries) <- c("Country", "UN.Region", "IMF.Estimate", "IMF.Year", "World.Bank.Estimate", "World.Bank.Year", "CIA.Estimate", "CIA.Year")
+
+#population
+colnames(population) <- c("rank", "Country", "Population.Numbers", "Population_%_of_the_world", "Date", "Source.official.or.from.the.United.Nations", "Notes") 
+
+#Incarceration
+colnames(incarnation.rates) <- c("Country", "Region", "Count", "Rate_per_100.000", "Male_%", "Female_%", "National_%", "Foreign_%", "Occupancy_%", "Remand_%") 
+
+#Area
+colnames(area) <- c("Rank", "Country", "Total_in_km^2.(mi^2)", "Land_in_km^2.(mi^2)", "Water_in_km^2.(mi^2)", "Water_%", "Notes")
+
+# Taking care of data abnormality
+
+# Replace "Congo" with "Republic of the Congo"
+incarnation.rates$Country <- gsub("Congo", "Republic of the Congo", incarnation.rates$Country)
+gdp.countries$Country <- gsub("Congo", "Republic of the Congo", gdp.countries$Country)
+
+
+# Replace "DR Congo" with "Democratic Republic of the Congo"
+incarnation.rates$Country <- gsub("DR Congo", "Democratic Republic of the Congo", incarnation.rates$Country)
+gdp.countries$Country <- gsub("DR Congo", "Democratic Republic of the Congo", gdp.countries$Country)
+gdp.countries$CIA.Estimate
+
+as.numeric(gsub(",","",gdp.countries$CIA.Estimate))
+gdp.countries$CIA.Estimate
+gdp.countries$CIA.Estimate<-as.numeric(gsub(",","",gdp.countries$CIA.Estimate))
+
+gdp.countries$CIA.Estimate
+
+# Joining table by country name
+#GDP
+merged_df<-c()
+merged_df<- merge(list.by.country, gdp.countries, by = "Country")
+#Population
+merged_df <- merge(merged_df, gdp.countries, by = "Country")
+#Incarceration
+merged_df <- merge(merged_df, incarnation.rates, by = "Country")
+#Area
+merged_df <- merge(merged_df, area, by = "Country")
+
+
+# Displaying the top five rows of the joined table
+head(merged_df, 5)
+
+### 5.b)
+# Creating the df
+cleaned_df <- merged_df[, c("Country", "CIA.Estimate", "2022 rank")]
+
+# Removing the NA values
+cleaned_df <- cleaned_df[complete.cases(cleaned_df), ]
+
+#Removing the "," mark and converting the characters to numeric
+cleaned_df$CIA.Estimate <- as.numeric(gsub(",", "", cleaned_df$CIA.Estimate))
+
+
+# First required regression
+reg1 <- lm(CIA.Estimate ~ `2022 rank`, data = cleaned_df)
+reg1
+
+# Create scatter plot with regression line
+gdp_plot <- ggplot(cleaned_df, aes(x = X2022.rank, y = CIA.Estimate)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE, color = "blue") +
+  labs(x = "Democracy Index 2022", y = "GDP (PPP) per capita")
+
+print(gdp_plot)
+
+
+
