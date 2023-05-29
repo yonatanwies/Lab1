@@ -8,6 +8,8 @@ library(ggthemes)
 library(reshape2) # melt: change data-frame format long/wide
 library(e1071) # skewness and kurtosis
 library(rvest)
+library(dplyr)
+
 #1.a
 
 
@@ -124,7 +126,7 @@ cluster4 <- list.by.country[list.by.country$Change <= -0.75 & list.by.country$Ch
 cluster5 <- list.by.country[list.by.country$Change <= -0.75 & list.by.country$`2022` - list.by.country$`Lowest drop` >= 0.75, ]
 cluster6 <- list.by.country[list.by.country$Change >= 0.75 & list.by.country$`2022` - list.by.country$`Highest point` <= -0.75, ]
 cluster7 <- list.by.country[list.by.country$`Highest` - list.by.country$`Lowest` < 0.5, ]
-cluster8 <- list.by.country[!(list.by.country %in% rbind(cluster1, cluster2, cluster3, cluster4, cluster5,cluster6,cluster7)), ]}
+cluster8 <- list.by.country[!(list.by.country %in% rbind(cluster1, cluster2, cluster3, cluster4, cluster5,cluster6,cluster7)), ]
 plot_democracy_index_country(cluster1[,-length(cluster1)],cluster1$Country)
 plot_democracy_index_country(cluster2[,-length(cluster2)], cluster2$Country)
 plot_democracy_index_country(cluster3[,-length(cluster3)], cluster3$Country)
@@ -274,20 +276,20 @@ plot(gdp_per_capita.sort, empirical_probs, type = "s", main = "Empirical CDF of 
 
 #7.
 avg.list2<-rowMeans(list.by.country[5:length(list.by.country)])
+list.by.country$Country
 map_list=bind_cols(list.by.country$Country,avg.list2)
+
 colnames(map_list)[colnames(map_list) == "...1"] <- "Country"
 colnames(map_list)[colnames(map_list) == "...2"] <- "average_democracy_index"
-install.packages("rworldmap") 
-library(rworldmap)
+
 data("countryExData", package = "rworldmap")
-map_list_clean <- map_list[complete.cases(map_list$average_democracy_index), ]
-world_map <- joinCountryData2Map(map_list_clean, joinCode = "ISO3", nameJoinColumn = "Country", verbose = TRUE)
-par(mar = c(0, 0, 0, 0))
-mapCountryData(world_map, nameColumnToPlot = "average_democracy_index", mapRegion = "world", colourPalette = "heat",
-               addLegend = TRUE, borderCol = "grey", mapTitle = "Average Democracy Index (2006-2022)",
-               aspect = 1, missingCountryCol = NA, add = FALSE, nameColumnToHatch = "", lwd = 0.5)
-mapCountryData(world_map, nameColumnToPlot = "average_democracy_index", catMethod = "fixedWidth",
-               mapTitle = "Average Democracy Index (2006-2022)", addLegend = TRUE)
+merged_data <- joinCountryData2Map(map_list, joinCode = "NAME", nameJoinColumn = "Country")
+setdiff(map_list$Country,countryExData$Country)
+countryExData$Country[which(map_list$Country %in% countryExData$Country)]
+
+world_map <- joinCountryData2Map(map_list, joinCode = 'NAME', nameJoinColumn = "Country",
+                                 nameCountryColumn = "Country", suggestForFailedCodes = FALSE,
+                                 mapResolution = "coarse", projection = NA, verbose = FALSE)
 
 
 
