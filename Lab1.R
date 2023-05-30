@@ -238,7 +238,7 @@ list.by.country$Country=gsub("\\ ", "", list.by.country$Country)
 #list.by.country$Country=gsub("\\s", "", list.by.country$Country)
 list.by.country$Country= gsub("\\(.*\\)", "", list.by.country$Country)
 
-#combined.table.GI %>% view()
+
 combined.table.GI=merge(gdp.countries,incarnation.rates)
 combined.table.GIA=merge(combined.table.GI,area)
 combined.table.GIAP=merge(combined.table.GIA,population,by="Country")
@@ -247,12 +247,11 @@ head(combined.table.GIAPL,5)
 
 
 #5.b.
-class(combined.table.GIAPL$`CIA[8][9][10]`)
-class(combined.table.GIAPL$`2022 rank`)
 CIA_reported <- as.numeric(gsub(",","",combined.table.GIAPL$`CIA[8][9][10]`))
 incar_rate <- as.numeric(combined.table.GIAPL$`Rate per 100,000 [3]`)
 data_2022 <- as.numeric(combined.table.GIAPL$`2022`)
 
+gdp.by.incar
 gdp.by.rank<-lm(CIA_reported~data_2022) 
 plot(data_2022,y = CIA_reported,xlab="2022 Rank",ylab = "GDP",main = "2022 Rank vs. CIA reported GDP")
 abline(gdp.by.rank, col="Blue", lwd = 2)
@@ -260,7 +259,6 @@ abline(gdp.by.rank, col="Blue", lwd = 2)
 gdp.by.incar<-lm(CIA_reported~incar_rate) 
 plot(incar_rate,CIA_reported,xlab="Incarnation Rate",ylab = "GDP",main = "Incarnation Rate vs. CIA reported GDP")
 abline(gdp.by.incar, col="Blue", lwd = 2)
-
 
 
 #6.a.
@@ -328,6 +326,9 @@ heatmap(CalcCor(DemocracyComponents,DemocracyComponentsNames)%>%as.matrix(),
         main = "Democracy Components Corrolations",
         colnames = DemocracyComponentsNames,
         rownames = DemocracyComponentsNames)
+
+mapCountryData(world_map, nameColumnToPlot = "average_democracy_index", catMethod = "fixedWidth",
+               mapTitle = "Average Democracy Index (2006-2022)", addLegend = TRUE)
 
 
 #Q8b
