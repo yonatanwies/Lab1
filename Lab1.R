@@ -9,6 +9,7 @@ library(reshape2) # melt: change data-frame format long/wide
 library(e1071) # skewness and kurtosis
 library(rvest)
 library(dplyr)
+library(corrplot)
 
 #1.a
 
@@ -26,7 +27,7 @@ list.by.country <- source %>%
   html_table(fill = TRUE)
 list.by.country <- as.data.frame(list.by.country[[1]])
 components <- source %>%
-  html_nodes(xpath = '//*[@id="mw-content-text"]/div[1]/table[7]') %>%
+  html_nodes(xpath = '//*[@id="mw-content-text"]/div[1]/table[6]') %>%
   html_table()
 components <- as.data.frame(components[[1]])
 head(list.by.region, 5)
@@ -43,7 +44,7 @@ top_five <- list.by.country %>%
   select(`Country`, `2022 rank`) %>% 
   head(5)
 x<-c(list.by.country[5,which(list.by.country$'Region'=="North America")])
-list.by.country
+
 avg.list<-rowMeans(list.by.country[5:length(list.by.country)]) %>% sort(decreasing = TRUE)
 top.average.five<-avg.list[1:5]
 bottom.average.five<-sort(avg.list,decreasing = FALSE)[1:5]
@@ -68,8 +69,6 @@ for(i in 1:length(regions)){
     }
   }
 }
-combined_list[[3]]
-boxplot.stats(combined_list[[2]])[4] == "numeric(0)"
 
 #2.b
 ggplot(list.by.country, aes(x = `2022`, fill = Region)) +
@@ -236,10 +235,10 @@ population$Country= gsub("\\ ", "", population$Country)
 population$Country= gsub("\\(.*\\)", "", population$Country)
 population$Country= gsub("\\s", "", population$Country)
 list.by.country$Country=gsub("\\ ", "", list.by.country$Country)
-list.by.country$Country=gsub("\\s", "", list.by.country$Country)
+#list.by.country$Country=gsub("\\s", "", list.by.country$Country)
 list.by.country$Country= gsub("\\(.*\\)", "", list.by.country$Country)
 
-combined.table.GI %>% view()
+#combined.table.GI %>% view()
 combined.table.GI=merge(gdp.countries,incarnation.rates)
 combined.table.GIA=merge(combined.table.GI,area)
 combined.table.GIAP=merge(combined.table.GIA,population,by="Country")
@@ -248,17 +247,22 @@ head(combined.table.GIAPL,5)
 
 
 #5.b.
-CIA_reported <- combined.table.GIAPL$`CIA[8][9][10]`
-rank_2022 <- combined.table.GIAPL$`2022 rank`
+class(combined.table.GIAPL$`CIA[8][9][10]`)
+class(combined.table.GIAPL$`2022 rank`)
+CIA_reported <- as.numeric(gsub(",","",combined.table.GIAPL$`CIA[8][9][10]`))
 incar_rate <- as.numeric(combined.table.GIAPL$`Rate per 100,000 [3]`)
+data_2022 <- as.numeric(combined.table.GIAPL$`2022`)
 
-gdp.by.rank<-lm(CIA_reported~rank_2022) 
-plot(rank_2022,CIA_reported,xlab="2022 Rank",ylab = "GDP",main = "2022 Rank vs. CIA reported GDP")
+gdp.by.rank<-lm(CIA_reported~data_2022) 
+plot(data_2022,y = CIA_reported,xlab="2022 Rank",ylab = "GDP",main = "2022 Rank vs. CIA reported GDP")
 abline(gdp.by.rank, col="Blue", lwd = 2)
 
 gdp.by.incar<-lm(CIA_reported~incar_rate) 
 plot(incar_rate,CIA_reported,xlab="Incarnation Rate",ylab = "GDP",main = "Incarnation Rate vs. CIA reported GDP")
 abline(gdp.by.incar, col="Blue", lwd = 2)
+
+
+
 #6.a.
 # Compute the empirical CDF
 combined.table.GIAPL$`CIA[8][9][10]`<-as.numeric(gsub("[^0-9.]","",combined.table.GIAPL$`CIA[8][9][10]`))
@@ -285,11 +289,48 @@ colnames(map_list)[colnames(map_list) == "...2"] <- "average_democracy_index"
 data("countryExData", package = "rworldmap")
 merged_data <- joinCountryData2Map(map_list, joinCode = "NAME", nameJoinColumn = "Country")
 setdiff(map_list$Country,countryExData$Country)
-countryExData$Country[which(map_list$Country %in% countryExData$Country)]
 
 world_map <- joinCountryData2Map(map_list, joinCode = 'NAME', nameJoinColumn = "Country",
                                  nameCountryColumn = "Country", suggestForFailedCodes = FALSE,
                                  mapResolution = "coarse", projection = NA, verbose = FALSE)
 
+mapCountryData(world_map, nameColumnToPlot = "average_democracy_index", mapRegion = "world", colourPalette = "heat",
+               addLegend = TRUE, borderCol = "black", mapTitle = "Average Democracy Index (2006-2022)",
+               aspect = 1, missingCountryCol = NA, add = FALSE, nameColumnToHatch = "", lwd = 0.5)
+
+#Q8a
+combined.table.GIAPLC <-merge(combined.table.GIAP,components,by="Country")
+combined.table.GIAPLC %>% head(5)
+ElectoralProccess <- as.numeric(combined.table.GIAPLC$`Elec­toral pro­cessand plura­lism`)
+FunctioningOfGovernment <- as.numeric(combined.table.GIAPLC$`Func­tioningof govern­ment`)
+PoliticalParticipation <- as.numeric(combined.table.GIAPLC$`Poli­ticalpartici­pation`)
+PoliticalCulture <- as.numeric(combined.table.GIAPLC$`Poli­ticalcul­ture`)
+CivilLiberties <- as.numeric(combined.table.GIAPLC$`Civilliber­ties`)
+
+DemocracyComponents<-cbind(ElectoralProccess,FunctioningOfGovernment,PoliticalCulture,PoliticalParticipation,CivilLiberties)
+DemocracyComponentsNames<-c("ElectoralProccess","FunctioningOfGovernment","PoliticalCulture","PoliticalParticipation","CivilLiberties")
+
+CalcCor <- function(vec,titles){
+  
+  result<-data.frame(matrix(0,nrow=5,ncol = 5,dimnames = list(c(titles),c(titles))))
+  for(i in 1:5){
+    for(j in 1:5){
+      result[i,j] <- cor(vec[,i],vec[,j])
+    }
+  } 
+  return(result)
+}
+CalcCor(DemocracyComponents,DemocracyComponentsNames)
+heatmap(CalcCor(DemocracyComponents,DemocracyComponentsNames)%>%as.matrix(),
+        Rowv = NA,      # Disable row clustering
+        Colv = NA,      # Disable column clustering
+        scale = "none", # Do not scale the values
+        main = "Democracy Components Corrolations",
+        colnames = DemocracyComponentsNames,
+        rownames = DemocracyComponentsNames)
 
 
+#Q8b
+
+gdp.by.ElectoralProccess<-lm(as.numeric(combined.table.GIAPLC$`CIA[8][9][10]`)~ ElectoralProccess+FunctioningOfGovernment+PoliticalCulture+PoliticalParticipation+CivilLiberties)
+gdp.by.ElectoralProccess
