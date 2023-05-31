@@ -120,21 +120,30 @@ list.by.country$Change <- list.by.country$`2022` - list.by.country$`2006`
 cluster1 <- list.by.country[list.by.country$Change >= 1.5, ]
 cluster2 <- list.by.country[list.by.country$Change <= -1.5, ]
 cluster3 <- list.by.country[list.by.country$Change >= 0.75 & list.by.country$Change <= 1.5, ]
-clust5<-filter(list.by.country,'2006'-apply(list.by.country[,6:18],1,min)>=0.75 & '2022'-apply(list.by.country[,6:18],1,min)>=0.75)
 cluster4 <- list.by.country[list.by.country$Change <= -0.75 & list.by.country$Change >= -1.5, ]
-cluster5 <- list.by.country[list.by.country$Change <= -0.75 & list.by.country$`2022` - list.by.country$`Lowest drop` >= 0.75, ]
-cluster6 <- list.by.country[list.by.country$Change >= 0.75 & list.by.country$`2022` - list.by.country$`Highest point` <= -0.75, ]
-cluster7 <- list.by.country[list.by.country$`Highest` - list.by.country$`Lowest` < 0.5, ]
-cluster8 <- list.by.country[!(list.by.country %in% rbind(cluster1, cluster2, cluster3, cluster4, cluster5,cluster6,cluster7)), ]
-plot_democracy_index_country(cluster1[,-length(cluster1)],cluster1$Country)
-plot_democracy_index_country(cluster2[,-length(cluster2)], cluster2$Country)
-plot_democracy_index_country(cluster3[,-length(cluster3)], cluster3$Country)
-plot_democracy_index_country(cluster4[,-length(cluster4)], cluster4$Country)
-plot_democracy_index_country(cluster5[,-length(cluster5)], cluster5$Country)
-plot_democracy_index_country(cluster6[,-length(cluster6)], cluster6$Country)
-plot_democracy_index_country(cluster7[,-length(cluster7)], cluster7$Country)
-plot_democracy_index_country(cluster8[,-length(cluster8)], cluster8$Country)
-
+cluster5 <- filter(list.by.country,list.by.country$"2006" - apply(list.by.country[,5:19],1,min)>=0.75 & list.by.country$"2022"- apply(list.by.country[,5:19],1,min)>=0.75)
+cluster6 <- filter(list.by.country,list.by.country$"2006" - apply(list.by.country[,5:19],1,max)<= -0.75 & list.by.country$"2022"- apply(list.by.country[,5:19],1,max)<= -0.75)
+cluster7 <- filter(list.by.country, (apply(list.by.country[, 5:19],1,max) - apply(list.by.country[, 5:19], 1, min)) < 0.5)
+lis<-c(cluster1$Country, cluster2$Country, cluster3$Country, cluster4$Country, cluster5$Country,cluster6$Country,cluster7$Country)
+cluster8$Country <- list.by.country[!list.by.country$Country %in% lis,]
+#clean the data and plot using the function
+view(list.by.country)
+cluster1_data <- subset(cluster1, select = -c(LowestDrop, HighestDrop, Change))
+cluster2_data <- subset(cluster2, select = -c(LowestDrop, HighestDrop, Change))
+cluster3_data <- subset(cluster3, select = -c(LowestDrop, HighestDrop, Change))
+cluster4_data <- subset(cluster4, select = -c(LowestDrop, HighestDrop, Change))
+cluster5_data <- subset(cluster5, select = -c(LowestDrop, HighestDrop, Change))
+cluster6_data <- subset(cluster6, select = -c(LowestDrop, HighestDrop, Change))
+cluster7_data <- subset(cluster7, select = -c(LowestDrop, HighestDrop, Change))
+cluster8_data <- subset(cluster8, select = -c(LowestDrop, HighestDrop, Change))
+plot_democracy_index_country(cluster1_data, cluster1$Country)
+plot_democracy_index_country(cluster2_data, cluster2$Country)
+plot_democracy_index_country(cluster3_data, cluster3$Country)
+plot_democracy_index_country(cluster4_data, cluster4$Country)
+plot_democracy_index_country(cluster5_data, cluster5$Country)
+plot_democracy_index_country(cluster6_data, cluster6$Country)
+plot_democracy_index_country(cluster7_data, cluster7$Country)
+plot_democracy_index_country(cluster8_data, cluster8$Country)
 
 
 #4
@@ -256,7 +265,7 @@ gdp.by.rank<-lm(CIA_reported~data_2022)
 plot(data_2022,y = CIA_reported,xlab="2022 Rank",ylab = "GDP",main = "2022 Rank vs. CIA reported GDP")
 abline(gdp.by.rank, col="Blue", lwd = 2)
 
-gdp.by.incar<-lm(CIA_reported~incar_rate) 
+gdp.by.incar<-lm(incar_rate~CIA_reported) 
 plot(incar_rate,CIA_reported,xlab="Incarnation Rate",ylab = "GDP",main = "Incarnation Rate vs. CIA reported GDP")
 abline(gdp.by.incar, col="Blue", lwd = 2)
 
