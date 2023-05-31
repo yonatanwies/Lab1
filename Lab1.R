@@ -10,12 +10,12 @@ library(e1071) # skewness and kurtosis
 library(rvest)
 library(dplyr)
 library(corrplot)
-
+library(car)
 #1.a
 
 
 # Use html_table to extract the individual tables from the all.tables object:
-url = 'https://en.wikipedia.org/wiki/Democracy_Index'
+url = 'https://en.wikipedia.org/wiki/The_Economist_Democracy_Index'
 source = read_html(url)
 all.tables = html_nodes(source, "table")  
 list.by.region <- source %>%
@@ -309,7 +309,6 @@ DemocracyComponents<-cbind(ElectoralProccess,FunctioningOfGovernment,PoliticalCu
 DemocracyComponentsNames<-c("ElectoralProccess","FunctioningOfGovernment","PoliticalCulture","PoliticalParticipation","CivilLiberties")
 
 CalcCor <- function(vec,titles){
-  
   result<-data.frame(matrix(0,nrow=5,ncol = 5,dimnames = list(c(titles),c(titles))))
   for(i in 1:5){
     for(j in 1:5){
@@ -318,7 +317,9 @@ CalcCor <- function(vec,titles){
   } 
   return(result)
 }
+
 CalcCor(DemocracyComponents,DemocracyComponentsNames)
+
 heatmap(CalcCor(DemocracyComponents,DemocracyComponentsNames)%>%as.matrix(),
         Rowv = NA,      # Disable row clustering
         Colv = NA,      # Disable column clustering
@@ -327,11 +328,41 @@ heatmap(CalcCor(DemocracyComponents,DemocracyComponentsNames)%>%as.matrix(),
         colnames = DemocracyComponentsNames,
         rownames = DemocracyComponentsNames)
 
-mapCountryData(world_map, nameColumnToPlot = "average_democracy_index", catMethod = "fixedWidth",
-               mapTitle = "Average Democracy Index (2006-2022)", addLegend = TRUE)
 
 
 #Q8b
 
-gdp.by.ElectoralProccess<-lm(as.numeric(combined.table.GIAPLC$`CIA[8][9][10]`)~ ElectoralProccess+FunctioningOfGovernment+PoliticalCulture+PoliticalParticipation+CivilLiberties)
-gdp.by.ElectoralProccess
+gdp.by.ElectoralProccess<-lm(CIA_reported~ ElectoralProccess+FunctioningOfGovernment+PoliticalCulture+PoliticalParticipation+CivilLiberties)
+summary(gdp.by.ElectoralProccess)
+
+
+coefficients <- coef(summary(gdp.by.ElectoralProccess))[, "Estimate"]
+p_values <- coef(summary(gdp.by.ElectoralProccess))[, "Pr(>|t|)"]
+significance_level <- 0.01
+
+significant_coefficients <- coefficients[p_values < significance_level]
+significant_coefficients
+
+
+residuals <- rstudent(gdp.by.ElectoralProccess)
+# Compute the 99th percentile of the residuals
+percentile_99 <- quantile(residuals, 1-significance_level)
+# Find the values in residuals that are bigger or smaller than the 99th percentile
+outliers <- residuals[residuals > percentile_99 | residuals < -percentile_99]
+outlier_countries <- combined.table.GIAPLC$Country[which(residuals>percentile_99 | residuals< -percentile_99)]
+outlier_countries
+
+residuals_table <- data.frame(Country = combined.table.GIAPLC$Country, Residuals = residuals)
+
+top_outliers <- head(residuals_table[order(residuals_table$Residuals, decreasing = TRUE), ], 5)
+
+bottom_outliers <- head(residuals_table[order(residuals_table$Residuals), ], 5)
+
+outliers_table <- rbind(top_outliers, bottom_outliers)
+
+#Other factors that maay contribute to a country's GDP score is being part of an alliance,
+# Such as NATO, or the UN. In addition, amount of natural resources the country have.
+
+
+
+outliers_table
