@@ -283,7 +283,7 @@ plot(gdp, main = "Empirical CDF of GDP (PPP) per capita", xlab = "GDP (PPP) per 
 #6.b.
 combined.table.GIAPL$Population <- as.numeric(gsub("[^0-9.]","",combined.table.GIAPL$Population))
 combined.table.GIAPL$`CIA[8][9][10]`<-as.numeric(gsub("[^0-9.]","",combined.table.GIAPL$`CIA[8][9][10]`))
-gdp_per_capita <-combined.table.GIAPL$Population / combined.table.GIAPL$`CIA[8][9][10]`
+gdp_per_capita <- combined.table.GIAPL$`CIA[8][9][10]`/combined.table.GIAPL$Population
 gdp_per_capita.sort=sort(gdp_per_capita)
 empirical_probs <- cumsum(combined.table.GIAPL$Population) / sum(combined.table.GIAPL$Population)
 plot(gdp_per_capita.sort, empirical_probs, type = "s", main = "Empirical CDF of GDP per capita by population",
