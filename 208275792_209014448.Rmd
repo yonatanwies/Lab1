@@ -1,6 +1,12 @@
-#To update our file, first save the changes locally on your computer, then click on the GIT button (next to "go to file/function)
-# and click "commit". this will save the branch. Afterwards click on "Push" to merge changes to main file.
-
+---
+title: "208275792_209014448"
+author: "Jonathan Wiesenfeld & Rom Meltzer"
+date: "`r Sys.Date()`"
+output: html_document
+---
+## Prior Contents
+Load Relevant libraries
+```{r, warning=FALSE, message=FALSE} 
 library(tidyverse) # This includes dplyr, stringr, ggplot2, .. 
 library(data.table)
 library(rworldmap) # world map
@@ -9,12 +15,14 @@ library(reshape2) # melt: change data-frame format long/wide
 library(e1071) # skewness and kurtosis
 library(rvest)
 library(dplyr)
-library(corrplot)
-library(car)
-#1.a
+library(corrplot) 
+library(car) #From moodle forum
+```
 
-
-# Use html_table to extract the individual tables from the all.tables object:
+## Q1: Loading data and basic processing:
+Loading the contents of "The Economist Democracy Index"; "List by Country", "List by Region", and "Components".
+Use html_table to extract the individual tables from the all.tables object.
+```{r}
 url = 'https://en.wikipedia.org/wiki/The_Economist_Democracy_Index'
 source = read_html(url)
 all.tables = html_nodes(source, "table")  
@@ -34,7 +42,12 @@ components <- components[c(-1,-2,-27,-76,-113),-2]
 head(list.by.region, 5)
 head(list.by.country, 5)
 head(components, 5)
-#1.b
+
+``` 
+## Q1b
+Displaying the 5 top and bottom countries based on democracy index in 2022.
+
+```{r}
 bottom_five <- list.by.country %>% 
   arrange(desc(`2022 rank`)) %>% 
   select(`Country`, `2022 rank` ) %>% 
@@ -44,19 +57,25 @@ top_five <- list.by.country %>%
   arrange(`2022 rank`) %>% 
   select(`Country`, `2022 rank`) %>% 
   head(5)
+top_five
+bottom_five
 
-#x<-c(list.by.country[5,which(list.by.country$'Region'=="North America")])
+```
+Repeat with average score between 2006 and 2022.
+```{r}
+avg.list<-rowMeans(list.by.country[5:length(list.by.country)])
+avg.list.withcountry<-data.frame(Country=list.by.country$Country,avg.list)
+sorted.alw <- avg.list.withcountry[order(avg.list.withcountry$avg.list, decreasing = TRUE), ]
+avg_top_5 <- sorted.alw[1:5, ]
+avg_bottom_5 <- sorted.alw[(nrow(sorted.alw)-4):nrow(sorted.alw), ]
+avg_top_5
+avg_bottom_5
+```
 
-avg.list<-rowMeans(list.by.country[5:length(list.by.country)]) %>% sort(decreasing = TRUE)
-top.average.five<-avg.list[1:5]
-bottom.average.five<-sort(avg.list,decreasing = FALSE)[1:5]
-top.average.five
-bottom.average.five
-#2.a
-
-boxplot(list.by.country$"2022" ~ list.by.country$Region, xlab = "Regions",ylab="Democracy Index",main="Distribution of Democracy index By Region")
-#i want to create a data frame that the name is the region's name, and the value is the vector of
-# values of 2022 for each region
+## Q2: Plotting distributions of groups of countries:
+We created boxplot for each region based on the distribution of _democracy index_. Calculated the outliers based on boxplot.stats; Israel and Turkey.
+```{r}
+boxplot(list.by.country$"2022" ~ list.by.country$Region,xlab="Regions",ylab="Index",main = "Democracy index Distribution")
 regions<- list.by.country$Region %>% unique()
 
 combined_list <- vector("list", length(regions))
@@ -73,7 +92,9 @@ for(i in 1:length(regions)){
   }
 }
 
-#2.b
+```
+## Q2b
+```{r}
 ggplot(list.by.country, aes(x = `2022`, fill = Region)) +
   geom_density(alpha = 0.5) +
   labs(x = "Democracy Index (2022)", y = "Density") +
@@ -88,8 +109,19 @@ summary_stats <- list.by.country %>%
   )
 
 print(summary_stats)
+```
+Mean: The mean represents the average value of the democracy index for each region in 2022. It provides a measure of central tendency. For example, in the "North America" region, the mean democracy index is 8.36, indicating that, on average, countries in this region tend to have a higher democracy index compared to other regions.
 
-#3.a
+Variance: The variance measures the spread or dispersion of the democracy index values within each region. A lower variance indicates that the values are clustered closer to the mean, while a higher variance suggests greater variability. For instance, the "North America" region has a variance of 0.530, indicating relatively low variability in the democracy index values compared to other regions.
+
+Skewness: Skewness quantifies the asymmetry of the distribution. A skewness value close to 0 suggests a symmetric distribution, while positive or negative values indicate right-skewed or left-skewed distributions, respectively. For example, the "Middle East and North Africa" region has a positive skewness of 1.43, indicating that the democracy index values are skewed towards lower values.
+
+Kurtosis: Kurtosis measures the shape of the distribution and describes the presence of heavy tails or outliers compared to a normal distribution. Positive kurtosis indicates a distribution with heavier tails and potentially more outliers, while negative kurtosis suggests a distribution with lighter tails. In the table, the "Western Europe" region has a high positive kurtosis of 3.93, indicating a distribution with heavy tails and potentially more extreme values (outliers).
+
+
+## Q3: Comparing countries and showing trends in democracy index:
+The code defines a function called plot_democracy_index_country that takes a data frame and a vector of country names as inputs. It subsets the data frame based on the provided country names and transforms the data into a long format. It then plots the democracy index values over time for the selected countries using different colors and line types. The function is used to plot the democracy index for five specific countries.
+```{r}
 #A function for listbycountry
 plot_democracy_index_country <- function(data, names) {
   subset_data <- data[data$Country %in% names, ]
@@ -118,8 +150,10 @@ plot_democracy_index_region <- function(data, names) {
 }
 plot_democracy_index_region(list.by.region,c("North America","Western Europe","Latin America and the Caribbean","Asia and Australasia","Central and Eastern Europe","Sub-Saharan Africa","Middle East and North Africa" ))
 plot_democracy_index_country(list.by.country,c("Canada","Israel","Iraq","Palestine","Norway"))
-#3b
-
+```
+## Q3b
+The code creates eight separate clusters of countries based on changes in the democracy index between 2006 and 2022. Each cluster is defined based on specific conditions such as the magnitude and direction of change. The resulting clusters are then used to create separate data frames for each cluster. The plot_democracy_index_country function is used to plot the democracy index over time for each cluster of countries.
+```{r}
 list.by.country$Change <- list.by.country$`2022` - list.by.country$`2006`
 cluster1 <- list.by.country[list.by.country$Change >= 1.5, ]
 cluster2 <- list.by.country[list.by.country$Change <= -1.5, ]
@@ -148,9 +182,12 @@ plot_democracy_index_country(cluster5_data, cluster5$Country)
 plot_democracy_index_country(cluster6_data, cluster6$Country)
 plot_democracy_index_country(cluster7_data, cluster7$Country)
 plot_democracy_index_country(cluster8_data, cluster8$Country)
+```
 
-
-#4
+## Q4: Change in category
+We created a helper function to determine type of demoocracy based on score, and then calculated the probability to move from one type of regime to another. The table is obviously not supposed to be symmetric.
+See this table as move from row[j] to column[i]. e.g., move from Full Democracy to Flawed democracy is 0.0754.
+```{r,warning=FALSE}
 #helper function to determine type of regime for each country.
 whichDemocracy<-function(num){
   ifelse(num>8 & num <=10,"Full democracy",
@@ -177,9 +214,7 @@ empirical_changes<-function(old,new){
 }
 
 empirical_changes(data_2006,data_2022)
-names <- c("Full democracy", "Flawed democracy", "Flawed democracy", "Authoritarian")
 
-# Create the heatmap
 heatmap(empirical_changes(data_2006,data_2022)%>%as.matrix(),
         Rowv = NA,      # Disable row clustering
         Colv = NA,      # Disable column clustering
@@ -187,11 +222,11 @@ heatmap(empirical_changes(data_2006,data_2022)%>%as.matrix(),
         main = "Empirical Changes",
         colnames = names,
         rownames = names)
+```
 
-
-
-#Q5
-#GDP
+## Q5: Joining data from additional tables
+We added the new sources, and cleaned the data to match our specifications. For example, we change the column names for all tables that represent country names, to be only _"Country"_.
+```{r,warning=FALSE}
 url = "https://en.wikipedia.org/wiki/List_of_countries_by_GDP_(PPP)_per_capita"
 source = read_html(url)
 all.tables = html_nodes(source, "table")  
@@ -209,7 +244,6 @@ incarnation.rates <- source %>%
   html_nodes(xpath = '//*[@id="mw-content-text"]/div[1]/table[2]') %>%
   html_table(fill =TRUE)
 incarnation.rates <- as.data.frame(incarnation.rates[[1]])
-incarnation.rates
 #AREA
 
 url = "https://en.wikipedia.org/wiki/List_of_countries_and_dependencies_by_area"
@@ -248,7 +282,6 @@ population$Country= gsub("\\ ", "", population$Country)
 population$Country= gsub("\\(.*\\)", "", population$Country)
 population$Country= gsub("\\s", "", population$Country)
 list.by.country$Country=gsub("\\ ", "", list.by.country$Country)
-#list.by.country$Country=gsub("\\s", "", list.by.country$Country)
 list.by.country$Country= gsub("\\(.*\\)", "", list.by.country$Country)
 
 
@@ -256,10 +289,13 @@ combined.table.GI=merge(gdp.countries,incarnation.rates)
 combined.table.GIA=merge(combined.table.GI,area)
 combined.table.GIAP=merge(combined.table.GIA,population,by="Country")
 combined.table.GIAPL=merge(combined.table.GIAP,list.by.country,by="Country")
-head(combined.table.GIAPL,5)
 
+head(combined.table.GIAPL,5) 
+```
 
-#5.b.
+## Q5b
+Here we try to fit a regression line, firstly with "GDP per capita" (="CIA_reported") as the response, and lastly with "incarnation rates" as the response.
+```{r,warning=FALSE}
 CIA_reported <- as.numeric(gsub(",","",combined.table.GIAPL$`CIA[8][9][10]`))
 incar_rate <- as.numeric(combined.table.GIAPL$`Rate per 100,000 [3]`)
 data_2022 <- as.numeric(combined.table.GIAPL$`2022`)
@@ -272,23 +308,34 @@ abline(gdp.by.rank, col="Blue", lwd = 2)
 gdp.by.incar<-lm(incar_rate~data_2022) 
 plot(x=data_2022,incar_rate,xlab="2022 rank",ylab = "Incarnation rate",main = "Incarnation Rate vs. CIA reported GDP")
 abline(gdp.by.incar, col="Blue", lwd = 2)
+```
 
-
-#6.a.
+## Q6: Empirical Cumulative Distribution Function (CDF)
+The code computes and plots the empirical cumulative distribution function (CDF) of the GDP (PPP) per capita for randomly selected countries. It first removes non-numeric characters from the CIA[8][9][10] column, converts it to numeric, and then uses the ecdf function to compute the empirical CDF. The resulting CDF is then plotted.
+```{r}
 # Compute the empirical CDF
 combined.table.GIAPL$`CIA[8][9][10]`<-as.numeric(gsub("[^0-9.]","",combined.table.GIAPL$`CIA[8][9][10]`))
 gdp=ecdf(combined.table.GIAPL$`CIA[8][9][10]`)
 plot(gdp, main = "Empirical CDF of GDP (PPP) per capita", xlab = "GDP (PPP) per capita", ylab = "Empirical CDF")
+```
 
-#6.b.
+## Q6b
+The code computes and plots the empirical CDF of the GDP per capita for randomly selected individuals in the world. It calculates the GDP per capita by dividing the population size by the corresponding GDP values, sorts the values, and computes the empirical probabilities. The resulting CDF is plotted to show the cumulative probability distribution.
+```{r}
+
 combined.table.GIAPL$Population <- as.numeric(gsub("[^0-9.]","",combined.table.GIAPL$Population))
 combined.table.GIAPL$`CIA[8][9][10]`<-as.numeric(gsub("[^0-9.]","",combined.table.GIAPL$`CIA[8][9][10]`))
 gdp_per_capita <-combined.table.GIAPL$Population / combined.table.GIAPL$`CIA[8][9][10]`
 gdp_per_capita.sort=sort(gdp_per_capita)
 empirical_probs <- cumsum(combined.table.GIAPL$Population) / sum(combined.table.GIAPL$Population)
-plot(gdp_per_capita.sort, empirical_probs, type = "s", main = "Empirical CDF of GDP per capita by population",
+plot(gdp_per_capita.sort, empirical_probs, type = "s", main = "Empirical CDF of GDP per capita by population)",
      xlab = "GDP per capita", ylab = "Cumulative-Probability")
-#6.c.
+```
+
+## Q6c
+The code computes and plots the empirical CDF of the GDP per capita for randomly selected individuals based on their location within the land area on Earth. It removes non-numeric characters from the Landin km2 (mi2) column, converts it to numeric, and filters out the corresponding GDP per capita values based on valid indices. It then calculates the GDP per capita per unit of land area, computes the weighted empirical CDF using land area as weights, and plots the resulting CDF.
+
+```{r}
 #remove number in parentheses
 converttochar<-as.character(combined.table.GIAPL$`Landin km2 (mi2)`)
 cleaned_values <- gsub("\\s*\\([^)]+\\)|,", "", converttochar)
@@ -307,7 +354,11 @@ empirical_probs_land <- cumsum(land_areakm2) / sum(land_areakm2)
 plot(sort(gdp_per_capita_land), empirical_probs_land, type = "s", 
      main = "Empirical CDF of GDP per capita by land area",
      xlab = "GDP per capita per unit of land area", ylab = "Cumulative Probability")
-#7.
+```
+
+## Q7: Displaying data on the world map
+
+```{r, warning=FALSE, message=FALSE,echo=FALSE}
 avg.list2<-rowMeans(list.by.country[5:length(list.by.country)])
 map_list=bind_cols(list.by.country$Country,avg.list2)
 
@@ -316,15 +367,15 @@ colnames(map_list)[colnames(map_list) == "...2"] <- "average_democracy_index"
 
 data("countryExData", package = "rworldmap")
 merged_data <- joinCountryData2Map(map_list, joinCode = "NAME", nameJoinColumn = "Country")
-setdiff(map_list$Country,countryExData$Country)
 
-world_map <- joinCountryData2Map(map_list, joinCode = 'NAME', nameJoinColumn = "Country",
-                                 nameCountryColumn = "Country", suggestForFailedCodes = FALSE,
-                                 mapResolution = "coarse", projection = NA, verbose = FALSE)
+world_map <- joinCountryData2Map(map_list, joinCode = 'NAME', nameJoinColumn = "Country", nameCountryColumn = "Country", suggestForFailedCodes = FALSE, mapResolution = "coarse", projection = NA, verbose = FALSE)
 
-mapCountryData(world_map, nameColumnToPlot = "average_democracy_index", mapRegion = "world", colourPalette = "heat",
-               addLegend = TRUE, borderCol = "black", mapTitle = "Average Democracy Index (2006-2022)",
-               aspect = 1, missingCountryCol = NA, add = FALSE, nameColumnToHatch = "", lwd = 0.5)
+mapCountryData(world_map, nameColumnToPlot = "average_democracy_index", mapRegion = "world", colourPalette = "heat", addLegend = TRUE, borderCol = "black", mapTitle = "Average Democracy Index (2006-2022)", aspect = 1, missingCountryCol = NA, add = FALSE, nameColumnToHatch = "", lwd = 0.5)
+```
+
+Next, we plot the _changes_ in the democracy index between 2006 and 2022.
+
+```{r}
 
 #Changes in Index
 
@@ -341,8 +392,12 @@ mapCountryData(world_map_changes, nameColumnToPlot = "Change_in_index", mapRegio
                addLegend = TRUE, borderCol = "black", mapTitle = "Change of Democracy Index (2006-2022)",
                aspect = 1, missingCountryCol = NA, add = FALSE, nameColumnToHatch = "", lwd = 0.5)
 
+```
 
-#Q8a
+
+# Q8a: Coponents of the Demography Index
+
+```{r, warning=FALSE}
 combined.table.GIAPLC <-merge(combined.table.GIAP,components,by="Country")
 combined.table.GIAPLC %>% head(5)
 ElectoralProccess <- as.numeric(combined.table.GIAPLC$`Elec­toral pro­cessand plura­lism`)
@@ -375,6 +430,44 @@ heatmap(CalcCor(DemocracyComponents,DemocracyComponentsNames)%>%as.matrix(),
         rownames = DemocracyComponentsNames)
 
 
+```
 
-#Q8b
+## Q8b
+
+```{r}
+
+gdp.by.ElectoralProccess<-lm(CIA_reported~ ElectoralProccess+FunctioningOfGovernment+PoliticalCulture+PoliticalParticipation+CivilLiberties)
+summary(gdp.by.ElectoralProccess)
+
+
+coefficients <- coef(summary(gdp.by.ElectoralProccess))[, "Estimate"]
+p_values <- coef(summary(gdp.by.ElectoralProccess))[, "Pr(>|t|)"]
+significance_level <- 0.01
+
+significant_coefficients <- coefficients[p_values < significance_level]
+significant_coefficients
+
+
+residuals <- rstudent(gdp.by.ElectoralProccess)
+# Compute the 99th percentile of the residuals
+percentile_99 <- quantile(residuals, 1-significance_level)
+# Find the values in residuals that are bigger or smaller than the 99th percentile
+outliers <- residuals[residuals > percentile_99 | residuals < -percentile_99]
+outlier_countries <- combined.table.GIAPLC$Country[which(residuals>percentile_99 | residuals< -percentile_99)]
+outlier_countries
+
+residuals_table <- data.frame(Country = combined.table.GIAPLC$Country, Residuals = residuals)
+
+top_outliers <- head(residuals_table[order(residuals_table$Residuals, decreasing = TRUE), ], 5)
+
+bottom_outliers <- head(residuals_table[order(residuals_table$Residuals), ], 5)
+
+outliers_table <- rbind(top_outliers, bottom_outliers)
+
+#Other factors that may contribute to a country's GDP score is being part of an alliance,
+# Such as NATO, or the UN. In addition, amount of natural resources the country have.
+
+
+
 outliers_table
+```
